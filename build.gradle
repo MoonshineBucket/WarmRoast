@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0.0-SNAPSHOT'
+
+archivesBaseName = 'warmroast'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile files('libraries/commons-io-2.7.jar', 'libraries/javax.jar',
+            'libraries/javax.servlet-api-3.1.0.jar', 'libraries/jcommander-1.78.jar',
+            'libraries/jetty-servlet-8.2.0.v20160908.jar', 'libraries/jetty-servlet-11.0.0.beta3.jar',
+            'libraries/opencsv-2.3.jar', 'libraries/tools-1.7.0.13.jar')
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { 'libraries/' +
+                        archivesBaseName + '/' + it.getName() }.join(' '),
+                'Main-Class': 'com.sk89q.warmroast.WarmRoast',
+                'Build-Contributor': 'DreamSmoke/MoonshineBucket',
+                'Build-Version': '1.0.0-server.beta.1.0.0',
+                'Build-JVersion': sourceCompatibility,
+                'Contributor-Contact': 'https://vk.com/moonshinebucket',
+                'Contributor-GutHub': 'https://github.com/MoonshineBucket')
+    }
+}
