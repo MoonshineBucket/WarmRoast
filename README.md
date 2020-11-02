@@ -1,7 +1,7 @@
 WarmRoast
 =========
 
-WarmRoast is an easy-to-use CPU sampling tool for JVM applications, but particularly suited for Minecraft servers/clients.
+WarmRoast codded by sk89q(https://github.com/sk89q), forked by DreamSmoke/MoonshineBucket(me), is an easy-to-use CPU sampling tool for JVM applications, but particularly suited for Minecraft servers/clients.
 
 * Adjustable sampling frequency.
 * Supports loading MCP mappings for deobfuscating class and method names.
