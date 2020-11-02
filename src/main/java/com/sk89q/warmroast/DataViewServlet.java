@@ -29,9 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 
 public class DataViewServlet extends HttpServlet {
     
-    private static final long serialVersionUID = -2331397310804298286L;
-    
-    private final WarmRoast roast;
+    private static long serialVersionUID = -2331397310804298286L;
+    private WarmRoast roast;
 
     public DataViewServlet(WarmRoast roast) {
         this.roast = roast;
@@ -50,16 +49,18 @@ public class DataViewServlet extends HttpServlet {
         w.println("<h1>WarmRoast</h1>");
         w.println("<div class=\"loading\">Downloading snapshot; please wait...</div>");
         w.println("<div class=\"stack\" style=\"display: none\">");
-        synchronized (roast) {
+        synchronized(roast) {
             Collection<StackNode> nodes = roast.getData().values();
-            for (StackNode node : nodes) {
+            for(StackNode node : nodes) {
                 w.println(node.toHtml(roast.getMapping()));
             }
-            if (nodes.size() == 0) {
+
+            if(nodes.size() == 0) {
                 w.println("<p class=\"no-results\">There are no results. " +
                 		"(Thread filter does not match thread?)</p>");
             }
         }
+
         w.println("</div>");
         w.println("<p class=\"legend\">Legend: ");
         w.println("<span class=\"matched\">Mapped</span> ");

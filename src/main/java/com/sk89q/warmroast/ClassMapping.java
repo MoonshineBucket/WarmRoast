@@ -25,9 +25,8 @@ import java.util.Map;
 
 public class ClassMapping {
     
-    private final String obfuscated;
-    private final String actual;
-    private final Map<String, List<String>> methods = new HashMap<>();
+    private String obfuscated, actual;
+    private Map<String, List<String>> methods = new HashMap<>();
     
     public ClassMapping(String obfuscated, String actual) {
         this.obfuscated = obfuscated;
@@ -44,18 +43,17 @@ public class ClassMapping {
     
     public void addMethod(String obfuscated, String actual) {
         List<String> m = methods.get(obfuscated);
-        if (m == null) {
+        if(m == null) {
             m = new ArrayList<>();
             methods.put(obfuscated, m);
         }
+
         m.add(actual);
     }
     
     public List<String> mapMethod(String obfuscated) {
         List<String> m = methods.get(obfuscated);
-        if (m == null) {
-            return new ArrayList<>();
-        }
+        if(m == null) return new ArrayList<>();
         return m;
     }
     

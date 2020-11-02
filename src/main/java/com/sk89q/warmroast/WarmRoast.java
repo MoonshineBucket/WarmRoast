@@ -58,14 +58,13 @@ import com.sun.tools.attach.VirtualMachineDescriptor;
 
 public class WarmRoast extends TimerTask {
 
-    private static final String SEPARATOR = 
-            "------------------------------------------------------------------------";
+    private static String SEPARATOR = "------------------------------------------------------------------------";
     
-    private final int interval;
-    private final VirtualMachine vm;
-    private final Timer timer = new Timer("Roast Pan", true);
-    private final McpMapping mapping = new McpMapping();
-    private final SortedMap<String, StackNode> nodes = new TreeMap<>();
+    private int interval;
+    private VirtualMachine vm;
+    private Timer timer = new Timer("Roast Pan", true);
+    private McpMapping mapping = new McpMapping();
+    private SortedMap<String, StackNode> nodes = new TreeMap<>();
     private JMXConnector connector;
     private MBeanServerConnection mbsc;
     private ThreadMXBean threadBean;
@@ -83,10 +82,11 @@ public class WarmRoast extends TimerTask {
     
     private StackNode getNode(String name) {
         StackNode node = nodes.get(name);
-        if (node == null) {
+        if(node == null) {
             node = new StackNode(name);
             nodes.put(name, node);
         }
+
         return node;
     }
     
@@ -110,16 +110,15 @@ public class WarmRoast extends TimerTask {
         this.endTime = l;
     }
 
-    public void connect() 
-            throws IOException, AgentLoadException, AgentInitializationException {
+    public void connect() throws IOException, AgentLoadException, AgentInitializationException {
         // Load the agent
         String connectorAddr = vm.getAgentProperties().getProperty(
                 "com.sun.management.jmxremote.localConnectorAddress");
-        if (connectorAddr == null) {
-            String agent = vm.getSystemProperties().getProperty("java.home")
-                    + File.separator + "lib" + File.separator
-                    + "management-agent.jar";
+        if(connectorAddr == null) {
+            String agent = vm.getSystemProperties().getProperty("java.home") + File.separator +
+                    "lib" + File.separator + "management-agent.jar";
             vm.loadAgent(agent);
+
             connectorAddr = vm.getAgentProperties().getProperty(
                     "com.sun.management.jmxremote.localConnectorAddress");
         }
@@ -128,6 +127,7 @@ public class WarmRoast extends TimerTask {
         JMXServiceURL serviceURL = new JMXServiceURL(connectorAddr);
         connector = JMXConnectorFactory.connect(serviceURL);
         mbsc = connector.getMBeanServerConnection();
+
         try {
             threadBean = getThreadMXBean();
         } catch (MalformedObjectNameException e) {
@@ -135,21 +135,22 @@ public class WarmRoast extends TimerTask {
         }
     }
 
-    private ThreadMXBean getThreadMXBean() 
-            throws IOException, MalformedObjectNameException {
+    private ThreadMXBean getThreadMXBean() throws IOException, MalformedObjectNameException {
         ObjectName objName = new ObjectName(ManagementFactory.THREAD_MXBEAN_NAME);
         Set<ObjectName> mbeans = mbsc.queryNames(objName, null);
-        for (ObjectName name : mbeans) {
-            return ManagementFactory.newPlatformMXBeanProxy(
-                    mbsc, name.toString(), ThreadMXBean.class);
+
+        for(ObjectName name : mbeans) {
+            return ManagementFactory.newPlatformMXBeanProxy(mbsc,
+                    name.toString(), ThreadMXBean.class);
         }
+
         throw new IOException("No thread MX bean found");
     }
 
     @Override
     public synchronized void run() {
-        if (endTime >= 0) {
-            if (endTime <= System.currentTimeMillis()) {
+        if(endTime >= 0) {
+            if(endTime <= System.currentTimeMillis()) {
                 cancel();
                 System.err.println("Sampling has stopped.");
                 return;
@@ -157,17 +158,12 @@ public class WarmRoast extends TimerTask {
         }
         
         ThreadInfo[] threadDumps = threadBean.dumpAllThreads(false, false);
-        for (ThreadInfo threadInfo : threadDumps) {
+        for(ThreadInfo threadInfo : threadDumps) {
             String threadName = threadInfo.getThreadName();
             StackTraceElement[] stack = threadInfo.getStackTrace();
             
-            if (threadName == null || stack == null) {
-                continue;
-            }
-            
-            if (filterThread != null && !filterThread.equals(threadName)) {
-                continue;
-            }
+            if(threadName == null || stack == null) continue;
+            if(filterThread != null && !filterThread.equals(threadName)) continue;
             
             StackNode node = getNode(threadName);
             node.log(stack, interval);
@@ -203,7 +199,7 @@ public class WarmRoast extends TimerTask {
         JCommander jc = new JCommander(opt, args);
         jc.setProgramName("warmroast");
         
-        if (opt.help) {
+        if(opt.help) {
             jc.usage();
             System.exit(0);
         }
@@ -216,7 +212,7 @@ public class WarmRoast extends TimerTask {
         
         VirtualMachine vm = null;
         
-        if (opt.pid != null) {
+        if(opt.pid != null) {
             try {
                 vm = VirtualMachine.attach(String.valueOf(opt.pid));
                 System.err.println("Attaching to PID " + opt.pid + "...");
@@ -225,9 +221,9 @@ public class WarmRoast extends TimerTask {
                 e.printStackTrace();
                 System.exit(1);
             }
-        } else if (opt.vmName != null) {
-            for (VirtualMachineDescriptor desc : VirtualMachine.list()) {
-                if (desc.displayName().contains(opt.vmName)) {
+        } else if(opt.vmName != null) {
+            for(VirtualMachineDescriptor desc : VirtualMachine.list()) {
+                if(desc.displayName().contains(opt.vmName)) {
                     try {
                         vm = VirtualMachine.attach(desc);
                         System.err.println("Attaching to '" + desc.displayName() + "'...");
@@ -242,21 +238,15 @@ public class WarmRoast extends TimerTask {
             }
         }
         
-        if (vm == null) {
+        if(vm == null) {
             List<VirtualMachineDescriptor> descriptors = VirtualMachine.list();
             System.err.println("Choose a VM:");
             
-            Collections.sort(descriptors, new Comparator<VirtualMachineDescriptor>() {
-                @Override
-                public int compare(VirtualMachineDescriptor o1,
-                        VirtualMachineDescriptor o2) {
-                    return o1.displayName().compareTo(o2.displayName());
-                }
-            });
+            Collections.sort(descriptors, Comparator.comparing(VirtualMachineDescriptor::displayName));
             
             // Print list of VMs
             int i = 1;
-            for (VirtualMachineDescriptor desc : descriptors) {
+            for(VirtualMachineDescriptor desc : descriptors) {
                 System.err.println("[" + (i++) + "] " + desc.displayName());
             }
             
@@ -265,6 +255,7 @@ public class WarmRoast extends TimerTask {
             System.err.print("Enter choice #: ");
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             String s;
+
             try {
                 s = reader.readLine();
             } catch (IOException e) {
@@ -274,11 +265,12 @@ public class WarmRoast extends TimerTask {
             // Get the VM
             try {
                 int choice = Integer.parseInt(s) - 1;
-                if (choice < 0 || choice >= descriptors.size()) {
+                if(choice < 0 || choice >= descriptors.size()) {
                     System.err.println("");
                     System.err.println("Given choice is out of range.");
                     System.exit(1);
                 }
+
                 vm = VirtualMachine.attach(descriptors.get(choice));
             } catch (NumberFormatException e) {
                 System.err.println("");
@@ -295,7 +287,7 @@ public class WarmRoast extends TimerTask {
         InetSocketAddress address = new InetSocketAddress(opt.bindAddress, opt.port);
 
         WarmRoast roast = new WarmRoast(vm, opt.interval);
-        if (opt.mappingsDir != null) {
+        if(opt.mappingsDir != null) {
             File dir = new File(opt.mappingsDir);
             File joined = new File(dir, "joined.srg");
             File methods = new File(dir, "methods.csv");
@@ -310,10 +302,9 @@ public class WarmRoast extends TimerTask {
         }
 
         System.err.println(SEPARATOR);
-        
+
         roast.setFilterThread(opt.threadName);
-        
-        if (opt.timeout != null && opt.timeout > 0) {
+        if(opt.timeout != null && opt.timeout > 0) {
             roast.setEndTime(System.currentTimeMillis() + opt.timeout * 1000);
             System.err.println("Sampling set to stop in " + opt.timeout + " seconds.");
         }

@@ -29,10 +29,11 @@ import java.util.Map;
 
 public class StackNode implements Comparable<StackNode> {
     
-    private static final NumberFormat cssDec = NumberFormat.getPercentInstance(Locale.US);
-    private final String name;
-    private final Map<String, StackNode> children = new HashMap<>();
+    private static NumberFormat cssDec = NumberFormat.getPercentInstance(Locale.US);
+    private Map<String, StackNode> children = new HashMap<>();
+
     private long totalTime;
+    private String name;
     
     static {
         cssDec.setGroupingUsed(false);
@@ -59,20 +60,22 @@ public class StackNode implements Comparable<StackNode> {
     
     public StackNode getChild(String name) {
         StackNode child = children.get(name);
-        if (child == null) {
+        if(child == null) {
             child = new StackNode(name);
             children.put(name, child);
         }
+
         return child;
     }
     
     public StackNode getChild(String className, String methodName) {
         StackTraceNode node = new StackTraceNode(className, methodName);
         StackNode child = children.get(node.getName());
-        if (child == null) {
+        if(child == null) {
             child = node;
             children.put(node.getName(), node);
         }
+
         return child;
     }
     
@@ -87,10 +90,7 @@ public class StackNode implements Comparable<StackNode> {
     private void log(StackTraceElement[] elements, int skip, long time) {
         log(time);
         
-        if (elements.length - skip == 0) {
-            return;
-        }
-        
+        if(elements.length - skip == 0) return;
         StackTraceElement bottom = elements[elements.length - (skip + 1)];
         getChild(bottom.getClassName(), bottom.getMethodName())
                 .log(elements, skip + 1, time);
@@ -110,26 +110,24 @@ public class StackNode implements Comparable<StackNode> {
         builder.append("<div class=\"name\">");
         builder.append(getNameHtml(mapping));
         builder.append("<span class=\"percent\">");
-        builder
-                .append(String.format("%.2f", getTotalTime() / (double) totalTime * 100))
-                .append("%");
+        builder.append(String.format("%.2f", getTotalTime() / (double) totalTime * 100)).append("%");
         builder.append("</span>");
         builder.append("<span class=\"time\">");
         builder.append(getTotalTime()).append("ms");
         builder.append("</span>");
         builder.append("<span class=\"bar\">");
         builder.append("<span class=\"bar-inner\" style=\"width:")
-                .append(formatCssPct(getTotalTime() / (double) totalTime))
-                .append("\">");
+                .append(formatCssPct(getTotalTime() / (double) totalTime)).append("\">");
         builder.append("</span>");
         builder.append("</span>");
         builder.append("</div>");
         builder.append("<ul class=\"children\">");
-        for (StackNode child : getChildren()) {
+        for(StackNode child : getChildren()) {
             builder.append("<li>");
             child.writeHtml(builder, mapping, totalTime);
             builder.append("</li>");
         }
+
         builder.append("</ul>");
         builder.append("</div>");
     }
@@ -142,12 +140,12 @@ public class StackNode implements Comparable<StackNode> {
     
     private void writeString(StringBuilder builder, int indent) {
         StringBuilder b = new StringBuilder();
-        for (int i = 0; i < indent; i++) {
+        for(int i = 0; i < indent; i++) {
             b.append(" ");
         }
+
         String padding = b.toString();
-        
-        for (StackNode child : getChildren()) {
+        for(StackNode child : getChildren()) {
             builder.append(padding).append(child.getName());
             builder.append(" ");
             builder.append(getTotalTime()).append("ms");
@@ -168,7 +166,8 @@ public class StackNode implements Comparable<StackNode> {
     }
     
     protected static String escapeHtml(String str) {
-        return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        return str.replace("&", "&amp;").replace("<", "&lt;")
+                .replace(">", "&gt;");
     }
 
 }
